@@ -3,18 +3,16 @@ package config
 import "os"
 
 type Config struct {
-	MongoURI  string
-	DBName    string
-	JWTSecret string
-	Port      string
+	DatabaseURL string
+	JWTSecret   string
+	Port        string
 }
 
 func Load() *Config {
 	return &Config{
-		MongoURI:  getEnv("MONGO_URI", "mongodb://localhost:27017"),
-		DBName:    getEnv("DB_NAME", "twitter_clone"),
-		JWTSecret: getEnv("JWT_SECRET", "your-secret-key"),
-		Port:      getEnv("PORT", "8080"),
+		DatabaseURL: getEnv("DATABASE_URL", "postgres://postgres:password@localhost:5432/twitter_clone?sslmode=disable"),
+		JWTSecret:   getEnv("JWT_SECRET", "your-secret-key"),
+		Port:        getEnv("PORT", "8080"),
 	}
 }
 

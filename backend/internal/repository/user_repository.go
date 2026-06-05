@@ -5,44 +5,58 @@ import (
 	"time"
 
 	"github.com/Kenya-i/twitter-clone/internal/domain"
-	"go.mongodb.org/mongo-driver/v2/bson"
-	"go.mongodb.org/mongo-driver/v2/bson/primitive"
-	"go.mongodb.org/mongo-driver/v2/mongo"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type userRepository struct {
-	collection *mongo.Collection
+	db *pgxpool.Pool
 }
 
-func NewUserRepository(db *mongo.Database) domain.UserRepository {
-	return &userRepository{
-		collection: db.Collection("users"),
-	}
+func NewUserRepository(db *pgxpool.Pool) domain.UserRepository {
+	return &userRepository{db: db}
 }
 
 func (r *userRepository) Create(user *domain.User) error {
-	user.ID = primitive.NewObjectID()
-	user.CreatedAt = time.Now()
-	user.UpdatedAt = time.Now()
+	query := `
+		INSERT INTO users (username, email, hashed_password, display_name, bio, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)
+		RETURNING id`
+
+	now := time.Now()
+	user.CreatedAt = now
+	user.UpdatedAt = now
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	_, err := r.collection.InsertOne(ctx, user)
-	return err
+	return r.db.QueryRow(ctx, query,
+		user.Username,
+		user.Email,
+		user.HashedPassword,
+		user.DisplayName,
+		user.Bio,
+		user.CreatedAt,
+		user.UpdatedAt,
+	).Scan(&user.ID)
 }
 
 func (r *userRepository) FindByID(id string) (*domain.User, error) {
-	objID, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		return nil, err
-	}
+	query := `SELECT id, username, email, hashed_password, display_name, bio, created_at, updated_at FROM users WHERE id = $1`
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	var user domain.User
-	err = r.collection.FindOne(ctx, bson.M{"_id": objID}).Decode(&user)
+	err := r.db.QueryRow(ctx, query, id).Scan(
+		&user.ID,
+		&user.Username,
+		&user.Email,
+		&user.HashedPassword,
+		&user.DisplayName,
+		&user.Bio,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -50,11 +64,22 @@ func (r *userRepository) FindByID(id string) (*domain.User, error) {
 }
 
 func (r *userRepository) FindByEmail(email string) (*domain.User, error) {
+	query := `SELECT id, username, email, hashed_password, display_name, bio, created_at, updated_at FROM users WHERE email = $1`
+
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	var user domain.User
-	err := r.collection.FindOne(ctx, bson.M{"email": email}).Decode(&user)
+	err := r.db.QueryRow(ctx, query, email).Scan(
+		&user.ID,
+		&user.Username,
+		&user.Email,
+		&user.HashedPassword,
+		&user.DisplayName,
+		&user.Bio,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -62,11 +87,22 @@ func (r *userRepository) FindByEmail(email string) (*domain.User, error) {
 }
 
 func (r *userRepository) FindByUsername(username string) (*domain.User, error) {
+	query := `SELECT id, username, email, hashed_password, display_name, bio, created_at, updated_at FROM users WHERE username = $1`
+
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	var user domain.User
-	err := r.collection.FindOne(ctx, bson.M{"username": username}).Decode(&user)
+	err := r.db.QueryRow(ctx, query, username).Scan(
+		&user.ID,
+		&user.Username,
+		&user.Email,
+		&user.HashedPassword,
+		&user.DisplayName,
+		&user.Bio,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+	)
 	if err != nil {
 		return nil, err
 	}
