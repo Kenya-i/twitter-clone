@@ -6,7 +6,6 @@ import (
 
 	"github.com/Kenya-i/twitter-clone/internal/domain"
 	"go.mongodb.org/mongo-driver/v2/bson"
-	"go.mongodb.org/mongo-driver/v2/bson/primitive"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
@@ -21,7 +20,7 @@ func NewUserRepository(db *mongo.Database) domain.UserRepository {
 }
 
 func (r *userRepository) Create(user *domain.User) error {
-	user.ID = primitive.NewObjectID()
+	user.ID = bson.NewObjectID()
 	user.CreatedAt = time.Now()
 	user.UpdatedAt = time.Now()
 
@@ -33,7 +32,7 @@ func (r *userRepository) Create(user *domain.User) error {
 }
 
 func (r *userRepository) FindByID(id string) (*domain.User, error) {
-	objID, err := primitive.ObjectIDFromHex(id)
+	objID, err := bson.ObjectIDFromHex(id)
 	if err != nil {
 		return nil, err
 	}
