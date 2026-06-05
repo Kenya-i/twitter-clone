@@ -5,15 +5,17 @@ import (
 	"time"
 
 	"github.com/Kenya-i/twitter-clone/internal/domain"
+	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type userUsecase struct {
-	userRepo domain.UserRepository
+	userRepo  domain.UserRepository
+	jwtSecret string
 }
 
-func NewUserUsecase(userRepo domain.UserRepository) domain.UserUsecase {
-	return &userUsecase{userRepo: userRepo}
+func NewUserUsecase(userRepo domain.UserRepository, jwtSecret string) domain.UserUsecase {
+	return &userUsecase{userRepo: userRepo, jwtSecret: jwtSecret}
 }
 
 func (u *userUsecase) Register(username, email, password, displayName string) (*domain.User, error) {
@@ -48,7 +50,12 @@ func (u *userUsecase) Login(email, password string) (string, error) {
 		return "", errors.New("メールアドレスまたはパスワードが正しくありません")
 	}
 
-	return user.ID, nil
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"user_id": user.ID,
+		"exp":     time.Now().Add(24 * time.Hour).Unix(),
+	})
+
+	return token.SignedString([]byte(u.jwtSecret))
 }
 
 func (u *userUsecase) GetProfile(id string) (*domain.User, error) {

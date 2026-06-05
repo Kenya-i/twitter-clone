@@ -6,6 +6,7 @@ import (
 
 	"github.com/Kenya-i/twitter-clone/internal/config"
 	"github.com/Kenya-i/twitter-clone/internal/handler"
+	"github.com/Kenya-i/twitter-clone/internal/middleware"
 	"github.com/Kenya-i/twitter-clone/internal/repository"
 	"github.com/Kenya-i/twitter-clone/internal/usecase"
 	"github.com/gin-gonic/gin"
@@ -22,14 +23,19 @@ func main() {
 	defer db.Close()
 
 	userRepo := repository.NewUserRepository(db)
-	userUsecase := usecase.NewUserUsecase(userRepo)
+	userUsecase := usecase.NewUserUsecase(userRepo, cfg.JWTSecret)
 	userHandler := handler.NewUserHandler(userUsecase)
 
 	r := gin.Default()
 
 	r.POST("/register", userHandler.Register)
 	r.POST("/login", userHandler.Login)
-	r.GET("/users/:id", userHandler.GetProfile)
+
+	auth := r.Group("/")
+	auth.Use(middleware.AuthMiddleware(cfg.JWTSecret))
+	{
+		auth.GET("/users/:id", userHandler.GetProfile)
+	}
 
 	r.Run(":" + cfg.Port)
 }
