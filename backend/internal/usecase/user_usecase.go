@@ -48,7 +48,7 @@ func (u *userUsecase) Login(email, password string) (string, error) {
 		return "", errors.New("メールアドレスまたはパスワードが正しくありません")
 	}
 
-	return user.ID.Hex(), nil
+	return user.ID, nil
 }
 
 func (u *userUsecase) GetProfile(id string) (*domain.User, error) {
