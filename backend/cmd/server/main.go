@@ -26,6 +26,10 @@ func main() {
 	userUsecase := usecase.NewUserUsecase(userRepo, cfg.JWTSecret)
 	userHandler := handler.NewUserHandler(userUsecase)
 
+	tweetRepo := repository.NewTweetRepository(db)
+	tweetUsecase := usecase.NewTweetUsecase(tweetRepo)
+	tweetHandler := handler.NewTweetHandler(tweetUsecase)
+
 	r := gin.Default()
 
 	r.POST("/register", userHandler.Register)
@@ -35,6 +39,9 @@ func main() {
 	auth.Use(middleware.AuthMiddleware(cfg.JWTSecret))
 	{
 		auth.GET("/users/:id", userHandler.GetProfile)
+		auth.POST("/tweets", tweetHandler.Post)
+		auth.GET("/tweets/:id", tweetHandler.GetTweet)
+		auth.DELETE("/tweets/:id", tweetHandler.Delete)
 	}
 
 	r.Run(":" + cfg.Port)
