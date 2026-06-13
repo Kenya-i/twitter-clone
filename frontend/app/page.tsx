@@ -1,8 +1,12 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { useAuth } from './context/AuthContext'
 
 export default function Home() {
+  const router = useRouter()
+  const { login } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -23,8 +27,8 @@ export default function Home() {
     }
 
     const data = await res.json()
-    localStorage.setItem('token', data.token)
-    alert('ログイン成功！')
+    login(data.token)
+    router.push('/timeline')
   }
 
   return (
