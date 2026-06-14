@@ -13,11 +13,13 @@ type Tweet struct {
 type TweetRepository interface {
 	Create(tweet *Tweet) error
 	FindByID(id string) (*Tweet, error)
+	FindAll() ([]*Tweet, error)
 	Delete(id string) error
 }
 
 type TweetUsecase interface {
 	Post(userID, content string) (*Tweet, error)
 	GetTweet(id string) (*Tweet, error)
+	GetTimeline() ([]*Tweet, error)
 	Delete(userID, tweetID string) error
 }
