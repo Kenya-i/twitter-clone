@@ -31,6 +31,10 @@ func (u *tweetUsecase) GetTweet(id string) (*domain.Tweet, error) {
 	return u.tweetRepo.FindByID(id)
 }
 
+func (u *tweetUsecase) GetTimeline() ([]*domain.Tweet, error) {
+	return u.tweetRepo.FindAll()
+}
+
 func (u *tweetUsecase) Delete(userID, tweetID string) error {
 	tweet, err := u.tweetRepo.FindByID(tweetID)
 	if err != nil {

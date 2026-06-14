@@ -46,6 +46,7 @@ func main() {
 	auth.Use(middleware.AuthMiddleware(cfg.JWTSecret))
 	{
 		auth.GET("/users/:id", userHandler.GetProfile)
+		auth.GET("/tweets", tweetHandler.GetTimeline)
 		auth.POST("/tweets", tweetHandler.Post)
 		auth.GET("/tweets/:id", tweetHandler.GetTweet)
 		auth.DELETE("/tweets/:id", tweetHandler.Delete)

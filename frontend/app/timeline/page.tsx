@@ -5,11 +5,20 @@ import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 
+type Tweet = {
+  id: string
+  user_id: string
+  content: string
+  created_at: string
+  updated_at: string
+}
+
 export default function Timeline() {
   const router = useRouter()
   const { token, logout } = useAuth()
   const [content, setContent] = useState('')
   const [message, setMessage] = useState('')
+  const [tweets, setTweets] = useState<Tweet[]>([])
 
   useEffect(() => {
     if (token === null) {
@@ -17,6 +26,23 @@ export default function Timeline() {
       if (!saved) router.push('/')
     }
   }, [token, router])
+
+  const fetchTweets = async () => {
+    const res = await fetch('http://localhost:8080/tweets', {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+
+    if (res.ok) {
+      const data = await res.json()
+      setTweets(data)
+    }
+  }
+
+  useEffect(() => {
+    if (token) fetchTweets()
+  }, [token])
 
   const handlePost = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -38,6 +64,7 @@ export default function Timeline() {
 
     setContent('')
     setMessage('投稿しました！')
+    fetchTweets()
   }
 
   return (
@@ -72,6 +99,16 @@ export default function Timeline() {
             ツイートする
           </button>
         </form>
+        <div className="mt-6 space-y-3">
+          {tweets.map((tweet) => (
+            <div key={tweet.id} className="border-b border-gray-200 pb-2">
+              <p className="text-sm">{tweet.content}</p>
+              <p className="text-xs text-gray-400 mt-1">
+                {new Date(tweet.created_at).toLocaleString()}
+              </p>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   )

@@ -57,6 +57,36 @@ func (r *tweetRepository) FindByID(id string) (*domain.Tweet, error) {
 	return &tweet, nil
 }
 
+func (r *tweetRepository) FindAll() ([]*domain.Tweet, error) {
+	query := `SELECT id, user_id, content, created_at, updated_at FROM tweets ORDER BY created_at DESC`
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	rows, err := r.db.Query(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	tweets := []*domain.Tweet{}
+	for rows.Next() {
+		var tweet domain.Tweet
+		if err := rows.Scan(
+			&tweet.ID,
+			&tweet.UserID,
+			&tweet.Content,
+			&tweet.CreatedAt,
+			&tweet.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		tweets = append(tweets, &tweet)
+	}
+
+	return tweets, rows.Err()
+}
+
 func (r *tweetRepository) Delete(id string) error {
 	query := `DELETE FROM tweets WHERE id = $1`
 

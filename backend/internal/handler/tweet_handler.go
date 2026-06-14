@@ -47,6 +47,16 @@ func (h *TweetHandler) GetTweet(c *gin.Context) {
 	c.JSON(http.StatusOK, tweet)
 }
 
+func (h *TweetHandler) GetTimeline(c *gin.Context) {
+	tweets, err := h.tweetUsecase.GetTimeline()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, tweets)
+}
+
 func (h *TweetHandler) Delete(c *gin.Context) {
 	tweetID := c.Param("id")
 	userID := c.GetString("user_id")
