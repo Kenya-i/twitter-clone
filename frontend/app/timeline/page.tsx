@@ -12,6 +12,8 @@ type Tweet = {
   content: string
   created_at: string
   updated_at: string
+  like_count: number
+  liked_by_me: boolean
 }
 
 export default function Timeline() {
@@ -111,6 +113,35 @@ export default function Timeline() {
     }
   }
 
+  const handleLike = async (tweet: Tweet) => {
+    const wasLiked = tweet.liked_by_me
+
+    setTweets((prev) =>
+      prev.map((t) =>
+        t.id === tweet.id
+          ? { ...t, liked_by_me: !wasLiked, like_count: t.like_count + (wasLiked ? -1 : 1) }
+          : t
+      )
+    )
+
+    const res = await fetch(`http://localhost:8080/tweets/${tweet.id}/like`, {
+      method: wasLiked ? 'DELETE' : 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+
+    if (!res.ok) {
+      setTweets((prev) =>
+        prev.map((t) =>
+          t.id === tweet.id
+            ? { ...t, liked_by_me: wasLiked, like_count: t.like_count + (wasLiked ? 1 : -1) }
+            : t
+        )
+      )
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md">
@@ -183,6 +214,19 @@ export default function Timeline() {
                     <p className="text-xs text-gray-400 mt-1">
                       {new Date(tweet.created_at).toLocaleString()}
                     </p>
+                    <div className="flex items-center gap-3 mt-1">
+                      <button
+                        onClick={() => handleLike(tweet)}
+                        className={`text-xs flex items-center gap-1 ${
+                          tweet.liked_by_me ? 'text-pink-500' : 'text-gray-400 hover:text-pink-500'
+                        }`}
+                      >
+                        {tweet.liked_by_me ? '♥' : '♡'} {tweet.like_count}
+                      </button>
+                      <Link href={`/tweets/${tweet.id}`} className="text-xs text-blue-500 hover:underline">
+                        詳細
+                      </Link>
+                    </div>
                   </>
                 )}
               </div>
