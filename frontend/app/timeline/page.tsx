@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
+import Link from 'next/link'
 
 type Tweet = {
   id: string
@@ -86,16 +87,22 @@ export default function Timeline() {
       <div className="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md">
         <div className="flex justify-between items-center mb-4">
           <h1 className="text-xl font-bold">タイムライン</h1>
-          <button
-            onClick={() => {
-              logout()
-              router.push('/')
-            }}
-            className="text-sm text-gray-500 hover:text-gray-700"
-          >
-            ログアウト
-          </button>
+          <div className="flex items-center gap-3">
+            <Link href="/profile" className="text-sm text-blue-500 hover:underline">
+              プロフィール
+            </Link>
+            <button
+              onClick={() => {
+                logout()
+                router.push('/')
+              }}
+              className="text-sm text-gray-500 hover:text-gray-700"
+            >
+              ログアウト
+            </button>
+          </div>
         </div>
+
 
         <form onSubmit={handlePost} className="space-y-2">
           {message && <p className="text-sm text-green-600">{message}</p>}
