@@ -15,7 +15,7 @@ type Tweet = {
 
 export default function Timeline() {
   const router = useRouter()
-  const { token, logout } = useAuth()
+  const { token, userId, logout } = useAuth()
   const [content, setContent] = useState('')
   const [message, setMessage] = useState('')
   const [tweets, setTweets] = useState<Tweet[]>([])
@@ -67,6 +67,20 @@ export default function Timeline() {
     fetchTweets()
   }
 
+  const handleDelete = async (id: string) => {
+    const res = await fetch(`http://localhost:8080/tweets/${id}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+
+    if (res.ok) {
+      fetchTweets()
+    }
+  }
+
+
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md">
@@ -101,11 +115,21 @@ export default function Timeline() {
         </form>
         <div className="mt-6 space-y-3">
           {tweets.map((tweet) => (
-            <div key={tweet.id} className="border-b border-gray-200 pb-2">
-              <p className="text-sm">{tweet.content}</p>
-              <p className="text-xs text-gray-400 mt-1">
-                {new Date(tweet.created_at).toLocaleString()}
-              </p>
+            <div key={tweet.id} className="border-b border-gray-200 pb-2 flex justify-between items-start">
+              <div>
+                <p className="text-sm">{tweet.content}</p>
+                <p className="text-xs text-gray-400 mt-1">
+                  {new Date(tweet.created_at).toLocaleString()}
+                </p>
+              </div>
+              {tweet.user_id === userId && (
+                <button
+                  onClick={() => handleDelete(tweet.id)}
+                  className="text-xs text-red-500 hover:text-red-700 ml-2"
+                >
+                  削除
+                </button>
+              )}
             </div>
           ))}
         </div>
