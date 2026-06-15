@@ -37,8 +37,9 @@ func (h *TweetHandler) Post(c *gin.Context) {
 
 func (h *TweetHandler) GetTweet(c *gin.Context) {
 	id := c.Param("id")
+	userID := c.GetString("user_id")
 
-	tweet, err := h.tweetUsecase.GetTweet(id)
+	tweet, err := h.tweetUsecase.GetTweet(id, userID)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "ツイートが見つかりません"})
 		return
@@ -48,7 +49,9 @@ func (h *TweetHandler) GetTweet(c *gin.Context) {
 }
 
 func (h *TweetHandler) GetTimeline(c *gin.Context) {
-	tweets, err := h.tweetUsecase.GetTimeline()
+	userID := c.GetString("user_id")
+
+	tweets, err := h.tweetUsecase.GetTimeline(userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -88,4 +91,28 @@ func (h *TweetHandler) Delete(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "削除しました"})
+}
+
+func (h *TweetHandler) Like(c *gin.Context) {
+	tweetID := c.Param("id")
+	userID := c.GetString("user_id")
+
+	if err := h.tweetUsecase.Like(userID, tweetID); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "いいねしました"})
+}
+
+func (h *TweetHandler) Unlike(c *gin.Context) {
+	tweetID := c.Param("id")
+	userID := c.GetString("user_id")
+
+	if err := h.tweetUsecase.Unlike(userID, tweetID); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "いいねを取り消しました"})
 }

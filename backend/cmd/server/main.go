@@ -28,7 +28,8 @@ func main() {
 	userHandler := handler.NewUserHandler(userUsecase)
 
 	tweetRepo := repository.NewTweetRepository(db)
-	tweetUsecase := usecase.NewTweetUsecase(tweetRepo)
+	likeRepo := repository.NewLikeRepository(db)
+	tweetUsecase := usecase.NewTweetUsecase(tweetRepo, likeRepo)
 	tweetHandler := handler.NewTweetHandler(tweetUsecase)
 
 	r := gin.Default()
@@ -51,6 +52,8 @@ func main() {
 		auth.GET("/tweets/:id", tweetHandler.GetTweet)
 		auth.PUT("/tweets/:id", tweetHandler.Update)
 		auth.DELETE("/tweets/:id", tweetHandler.Delete)
+		auth.POST("/tweets/:id/like", tweetHandler.Like)
+		auth.DELETE("/tweets/:id/like", tweetHandler.Unlike)
 	}
 
 	r.Run(":" + cfg.Port)
