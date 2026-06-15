@@ -81,6 +81,35 @@ export default function Timeline() {
     }
   }
 
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editContent, setEditContent] = useState('')
+
+  const handleEditStart = (tweet: Tweet) => {
+    setEditingId(tweet.id)
+    setEditContent(tweet.content)
+  }
+
+  const handleEditCancel = () => {
+    setEditingId(null)
+    setEditContent('')
+  }
+
+  const handleUpdate = async (id: string) => {
+    const res = await fetch(`http://localhost:8080/tweets/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ content: editContent }),
+    })
+
+    if (res.ok) {
+      setEditingId(null)
+      setEditContent('')
+      fetchTweets()
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 p-8">
@@ -102,8 +131,6 @@ export default function Timeline() {
             </button>
           </div>
         </div>
-
-
         <form onSubmit={handlePost} className="space-y-2">
           {message && <p className="text-sm text-green-600">{message}</p>}
           <textarea
@@ -123,22 +150,57 @@ export default function Timeline() {
         <div className="mt-6 space-y-3">
           {tweets.map((tweet) => (
             <div key={tweet.id} className="border-b border-gray-200 pb-2 flex justify-between items-start">
-              <div>
+              <div className="flex-1">
                 <Link href={`/users/${tweet.user_id}`} className="text-xs text-blue-500 hover:underline">
                   投稿者のプロフィール
                 </Link>
-                <p className="text-sm mt-1">{tweet.content}</p>
-                <p className="text-xs text-gray-400 mt-1">
-                  {new Date(tweet.created_at).toLocaleString()}
-                </p>
+                {editingId === tweet.id ? (
+                  <div className="mt-1 space-y-2">
+                    <textarea
+                      value={editContent}
+                      onChange={(e) => setEditContent(e.target.value)}
+                      className="w-full border border-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      rows={2}
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleUpdate(tweet.id)}
+                        className="text-xs text-blue-500 hover:text-blue-700"
+                      >
+                        保存
+                      </button>
+                      <button
+                        onClick={handleEditCancel}
+                        className="text-xs text-gray-500 hover:text-gray-700"
+                      >
+                        キャンセル
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-sm mt-1">{tweet.content}</p>
+                    <p className="text-xs text-gray-400 mt-1">
+                      {new Date(tweet.created_at).toLocaleString()}
+                    </p>
+                  </>
+                )}
               </div>
-              {tweet.user_id === userId && (
-                <button
-                  onClick={() => handleDelete(tweet.id)}
-                  className="text-xs text-red-500 hover:text-red-700 ml-2"
-                >
-                  削除
-                </button>
+              {tweet.user_id === userId && editingId !== tweet.id && (
+                <div className="flex gap-2 ml-2">
+                  <button
+                    onClick={() => handleEditStart(tweet)}
+                    className="text-xs text-blue-500 hover:text-blue-700"
+                  >
+                    編集
+                  </button>
+                  <button
+                    onClick={() => handleDelete(tweet.id)}
+                    className="text-xs text-red-500 hover:text-red-700"
+                  >
+                    削除
+                  </button>
+                </div>
               )}
             </div>
           ))}
