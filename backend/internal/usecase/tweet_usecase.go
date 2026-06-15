@@ -35,6 +35,25 @@ func (u *tweetUsecase) GetTimeline() ([]*domain.Tweet, error) {
 	return u.tweetRepo.FindAll()
 }
 
+func (u *tweetUsecase) Update(userID, tweetID, content string) (*domain.Tweet, error) {
+	tweet, err := u.tweetRepo.FindByID(tweetID)
+	if err != nil {
+		return nil, errors.New("ツイートが見つかりません")
+	}
+
+	if tweet.UserID != userID {
+		return nil, errors.New("編集権限がありません")
+	}
+
+	tweet.Content = content
+
+	if err := u.tweetRepo.Update(tweet); err != nil {
+		return nil, err
+	}
+
+	return tweet, nil
+}
+
 func (u *tweetUsecase) Delete(userID, tweetID string) error {
 	tweet, err := u.tweetRepo.FindByID(tweetID)
 	if err != nil {

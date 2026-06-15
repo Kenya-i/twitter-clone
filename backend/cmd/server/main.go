@@ -35,7 +35,7 @@ func main() {
 
 	r.Use(cors.New(cors.Config{
 		AllowOrigins: []string{"http://localhost:3000"},
-		AllowMethods: []string{"GET", "POST", "DELETE", "OPTIONS"},
+		AllowMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders: []string{"Origin", "Content-Type", "Authorization"},
 	}))
 
@@ -49,6 +49,7 @@ func main() {
 		auth.GET("/tweets", tweetHandler.GetTimeline)
 		auth.POST("/tweets", tweetHandler.Post)
 		auth.GET("/tweets/:id", tweetHandler.GetTweet)
+		auth.PUT("/tweets/:id", tweetHandler.Update)
 		auth.DELETE("/tweets/:id", tweetHandler.Delete)
 	}
 

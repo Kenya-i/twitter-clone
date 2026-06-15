@@ -87,6 +87,18 @@ func (r *tweetRepository) FindAll() ([]*domain.Tweet, error) {
 	return tweets, rows.Err()
 }
 
+func (r *tweetRepository) Update(tweet *domain.Tweet) error {
+	query := `UPDATE tweets SET content = $1, updated_at = $2 WHERE id = $3`
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	tweet.UpdatedAt = time.Now()
+
+	_, err := r.db.Exec(ctx, query, tweet.Content, tweet.UpdatedAt, tweet.ID)
+	return err
+}
+
 func (r *tweetRepository) Delete(id string) error {
 	query := `DELETE FROM tweets WHERE id = $1`
 

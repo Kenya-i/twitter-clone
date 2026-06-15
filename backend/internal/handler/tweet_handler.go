@@ -57,6 +57,27 @@ func (h *TweetHandler) GetTimeline(c *gin.Context) {
 	c.JSON(http.StatusOK, tweets)
 }
 
+func (h *TweetHandler) Update(c *gin.Context) {
+	var req struct {
+		Content string `json:"content" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "contentは必須です"})
+		return
+	}
+
+	tweetID := c.Param("id")
+	userID := c.GetString("user_id")
+
+	tweet, err := h.tweetUsecase.Update(userID, tweetID, req.Content)
+	if err != nil {
+		c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, tweet)
+}
+
 func (h *TweetHandler) Delete(c *gin.Context) {
 	tweetID := c.Param("id")
 	userID := c.GetString("user_id")
