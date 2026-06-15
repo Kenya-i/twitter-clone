@@ -124,7 +124,10 @@ export default function Timeline() {
           {tweets.map((tweet) => (
             <div key={tweet.id} className="border-b border-gray-200 pb-2 flex justify-between items-start">
               <div>
-                <p className="text-sm">{tweet.content}</p>
+                <Link href={`/users/${tweet.user_id}`} className="text-xs text-blue-500 hover:underline">
+                  投稿者のプロフィール
+                </Link>
+                <p className="text-sm mt-1">{tweet.content}</p>
                 <p className="text-xs text-gray-400 mt-1">
                   {new Date(tweet.created_at).toLocaleString()}
                 </p>
