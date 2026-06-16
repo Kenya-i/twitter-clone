@@ -50,6 +50,7 @@ func main() {
 	auth := r.Group("/")
 	auth.Use(middleware.AuthMiddleware(cfg.JWTSecret))
 	{
+		auth.GET("/users", userHandler.GetUsers)
 		auth.GET("/users/:id", userHandler.GetProfile)
 		auth.GET("/users/:id/follow", followHandler.GetFollowInfo)
 		auth.POST("/users/:id/follow", followHandler.Follow)

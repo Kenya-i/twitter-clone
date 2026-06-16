@@ -61,3 +61,7 @@ func (u *userUsecase) Login(email, password string) (string, error) {
 func (u *userUsecase) GetProfile(id string) (*domain.User, error) {
 	return u.userRepo.FindByID(id)
 }
+
+func (u *userUsecase) GetUsers() ([]*domain.User, error) {
+	return u.userRepo.FindAll()
+}

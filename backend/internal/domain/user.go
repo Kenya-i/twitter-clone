@@ -18,10 +18,12 @@ type UserRepository interface {
 	FindByID(id string) (*User, error)
 	FindByEmail(email string) (*User, error)
 	FindByUsername(username string) (*User, error)
+	FindAll() ([]*User, error)
 }
 
 type UserUsecase interface {
 	Register(username, email, password, displayName string) (*User, error)
 	Login(email, password string) (string, error)
 	GetProfile(id string) (*User, error)
+	GetUsers() ([]*User, error)
 }
