@@ -15,7 +15,7 @@ type Tweet struct {
 type TweetRepository interface {
 	Create(tweet *Tweet) error
 	FindByID(id string) (*Tweet, error)
-	FindAll() ([]*Tweet, error)
+	FindByFollowing(userID string) ([]*Tweet, error)
 	Update(tweet *Tweet) error
 	Delete(id string) error
 }

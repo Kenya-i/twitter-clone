@@ -148,6 +148,9 @@ export default function Timeline() {
         <div className="flex justify-between items-center mb-4">
           <h1 className="text-xl font-bold">タイムライン</h1>
           <div className="flex items-center gap-3">
+            <Link href="/users" className="text-sm text-blue-500 hover:underline">
+              ユーザーを探す
+            </Link>
             <Link href="/profile" className="text-sm text-blue-500 hover:underline">
               プロフィール
             </Link>
