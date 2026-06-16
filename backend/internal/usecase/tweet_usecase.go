@@ -42,7 +42,7 @@ func (u *tweetUsecase) GetTweet(id, userID string) (*domain.Tweet, error) {
 }
 
 func (u *tweetUsecase) GetTimeline(userID string) ([]*domain.Tweet, error) {
-	tweets, err := u.tweetRepo.FindAll()
+	tweets, err := u.tweetRepo.FindByFollowing(userID)
 	if err != nil {
 		return nil, err
 	}

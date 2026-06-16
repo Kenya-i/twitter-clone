@@ -32,6 +32,10 @@ func main() {
 	tweetUsecase := usecase.NewTweetUsecase(tweetRepo, likeRepo)
 	tweetHandler := handler.NewTweetHandler(tweetUsecase)
 
+	followRepo := repository.NewFollowRepository(db)
+	followUsecase := usecase.NewFollowUsecase(followRepo)
+	followHandler := handler.NewFollowHandler(followUsecase)
+
 	r := gin.Default()
 
 	r.Use(cors.New(cors.Config{
@@ -47,6 +51,9 @@ func main() {
 	auth.Use(middleware.AuthMiddleware(cfg.JWTSecret))
 	{
 		auth.GET("/users/:id", userHandler.GetProfile)
+		auth.GET("/users/:id/follow", followHandler.GetFollowInfo)
+		auth.POST("/users/:id/follow", followHandler.Follow)
+		auth.DELETE("/users/:id/follow", followHandler.Unfollow)
 		auth.GET("/tweets", tweetHandler.GetTimeline)
 		auth.POST("/tweets", tweetHandler.Post)
 		auth.GET("/tweets/:id", tweetHandler.GetTweet)

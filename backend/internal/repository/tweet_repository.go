@@ -57,13 +57,18 @@ func (r *tweetRepository) FindByID(id string) (*domain.Tweet, error) {
 	return &tweet, nil
 }
 
-func (r *tweetRepository) FindAll() ([]*domain.Tweet, error) {
-	query := `SELECT id, user_id, content, created_at, updated_at FROM tweets ORDER BY created_at DESC`
+func (r *tweetRepository) FindByFollowing(userID string) ([]*domain.Tweet, error) {
+	query := `
+		SELECT id, user_id, content, created_at, updated_at
+		FROM tweets
+		WHERE user_id = $1
+		   OR user_id IN (SELECT following_id FROM follows WHERE follower_id = $1)
+		ORDER BY created_at DESC`
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	rows, err := r.db.Query(ctx, query)
+	rows, err := r.db.Query(ctx, query, userID)
 	if err != nil {
 		return nil, err
 	}
