@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import Link from 'next/link'
+import { API_URL } from '../../lib/api'
 
 type Tweet = {
   id: string
@@ -31,7 +32,7 @@ export default function Timeline() {
   }, [token, router])
 
   const fetchTweets = async () => {
-    const res = await fetch('http://localhost:8080/tweets', {
+    const res = await fetch(`${API_URL}/tweets`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -51,7 +52,7 @@ export default function Timeline() {
     e.preventDefault()
     setMessage('')
 
-    const res = await fetch('http://localhost:8080/tweets', {
+    const res = await fetch(`${API_URL}/tweets`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -71,7 +72,7 @@ export default function Timeline() {
   }
 
   const handleDelete = async (id: string) => {
-    const res = await fetch(`http://localhost:8080/tweets/${id}`, {
+    const res = await fetch(`${API_URL}/tweets/${id}`, {
       method: 'DELETE',
       headers: {
         Authorization: `Bearer ${token}`,
@@ -97,7 +98,7 @@ export default function Timeline() {
   }
 
   const handleUpdate = async (id: string) => {
-    const res = await fetch(`http://localhost:8080/tweets/${id}`, {
+    const res = await fetch(`${API_URL}/tweets/${id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -124,7 +125,7 @@ export default function Timeline() {
       )
     )
 
-    const res = await fetch(`http://localhost:8080/tweets/${tweet.id}/like`, {
+    const res = await fetch(`${API_URL}/tweets/${tweet.id}/like`, {
       method: wasLiked ? 'DELETE' : 'POST',
       headers: {
         Authorization: `Bearer ${token}`,

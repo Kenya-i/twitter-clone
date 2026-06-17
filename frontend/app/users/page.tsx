@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '../context/AuthContext'
+import { API_URL } from '../../lib/api'
 
 type User = {
   id: string
@@ -28,7 +29,7 @@ export default function UserList() {
     if (!token) return
 
     const fetchUsers = async () => {
-      const res = await fetch('http://localhost:8080/users', {
+      const res = await fetch(`${API_URL}/users`, {
         headers: { Authorization: `Bearer ${token}` },
       })
 

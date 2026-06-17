@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '../../context/AuthContext'
+import { API_URL } from '../../../lib/api'
 
 type Tweet = {
   id: string
@@ -34,7 +35,7 @@ export default function TweetDetail() {
     if (!token) return
 
     const fetchTweet = async () => {
-      const res = await fetch(`http://localhost:8080/tweets/${params.id}`, {
+      const res = await fetch(`${API_URL}/tweets/${params.id}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -59,7 +60,7 @@ export default function TweetDetail() {
       like_count: tweet.like_count + (wasLiked ? -1 : 1),
     })
 
-    const res = await fetch(`http://localhost:8080/tweets/${tweet.id}/like`, {
+    const res = await fetch(`${API_URL}/tweets/${tweet.id}/like`, {
       method: wasLiked ? 'DELETE' : 'POST',
       headers: {
         Authorization: `Bearer ${token}`,
@@ -89,7 +90,7 @@ export default function TweetDetail() {
   const handleUpdate = async () => {
     if (!tweet) return
 
-    const res = await fetch(`http://localhost:8080/tweets/${tweet.id}`, {
+    const res = await fetch(`${API_URL}/tweets/${tweet.id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -109,7 +110,7 @@ export default function TweetDetail() {
   const handleDelete = async () => {
     if (!tweet) return
 
-    const res = await fetch(`http://localhost:8080/tweets/${tweet.id}`, {
+    const res = await fetch(`${API_URL}/tweets/${tweet.id}`, {
       method: 'DELETE',
       headers: {
         Authorization: `Bearer ${token}`,

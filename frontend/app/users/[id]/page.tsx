@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '../../context/AuthContext'
+import { API_URL } from '../../../lib/api'
 
 type User = {
   id: string
@@ -39,10 +40,10 @@ export default function UserProfile() {
 
     const fetchProfile = async () => {
       const [userRes, followRes] = await Promise.all([
-        fetch(`http://localhost:8080/users/${params.id}`, {
+        fetch(`${API_URL}/users/${params.id}`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        fetch(`http://localhost:8080/users/${params.id}/follow`, {
+        fetch(`${API_URL}/users/${params.id}/follow`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
       ])
@@ -71,7 +72,7 @@ export default function UserProfile() {
       followers_count: followInfo.followers_count + (wasFollowing ? -1 : 1),
     })
 
-    const res = await fetch(`http://localhost:8080/users/${params.id}/follow`, {
+    const res = await fetch(`${API_URL}/users/${params.id}/follow`, {
       method: wasFollowing ? 'DELETE' : 'POST',
       headers: { Authorization: `Bearer ${token}` },
     })
