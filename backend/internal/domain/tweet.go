@@ -15,7 +15,7 @@ type Tweet struct {
 type TweetRepository interface {
 	Create(tweet *Tweet) error
 	FindByID(id string) (*Tweet, error)
-	FindByFollowing(userID string) ([]*Tweet, error)
+	FindByFollowing(userID string, cursor *time.Time, limit int) ([]*Tweet, error)
 	Update(tweet *Tweet) error
 	Delete(id string) error
 }
@@ -23,7 +23,7 @@ type TweetRepository interface {
 type TweetUsecase interface {
 	Post(userID, content string) (*Tweet, error)
 	GetTweet(id, userID string) (*Tweet, error)
-	GetTimeline(userID string) ([]*Tweet, error)
+	GetTimeline(userID string, cursor *time.Time, limit int) ([]*Tweet, error)
 	Update(userID, tweetID, content string) (*Tweet, error)
 	Delete(userID, tweetID string) error
 	Like(userID, tweetID string) error

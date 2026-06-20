@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"errors"
+	"time"
 
 	"github.com/Kenya-i/twitter-clone/internal/domain"
 )
@@ -41,8 +42,8 @@ func (u *tweetUsecase) GetTweet(id, userID string) (*domain.Tweet, error) {
 	return tweet, nil
 }
 
-func (u *tweetUsecase) GetTimeline(userID string) ([]*domain.Tweet, error) {
-	tweets, err := u.tweetRepo.FindByFollowing(userID)
+func (u *tweetUsecase) GetTimeline(userID string, cursor *time.Time, limit int) ([]*domain.Tweet, error) {
+	tweets, err := u.tweetRepo.FindByFollowing(userID, cursor, limit)
 	if err != nil {
 		return nil, err
 	}

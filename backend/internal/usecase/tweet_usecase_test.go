@@ -3,6 +3,7 @@ package usecase
 import (
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/Kenya-i/twitter-clone/internal/domain"
 )
@@ -24,7 +25,7 @@ func (m *mockTweetRepository) FindByID(id string) (*domain.Tweet, error) {
 	return tweet, nil
 }
 
-func (m *mockTweetRepository) FindByFollowing(userID string) ([]*domain.Tweet, error) {
+func (m *mockTweetRepository) FindByFollowing(userID string, cursor *time.Time, limit int) ([]*domain.Tweet, error) {
 	return nil, nil
 }
 
