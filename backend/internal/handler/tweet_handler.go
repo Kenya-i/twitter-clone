@@ -2,6 +2,8 @@ package handler
 
 import (
 	"net/http"
+	"strconv"
+	"time"
 
 	"github.com/Kenya-i/twitter-clone/internal/domain"
 	"github.com/gin-gonic/gin"
@@ -51,13 +53,38 @@ func (h *TweetHandler) GetTweet(c *gin.Context) {
 func (h *TweetHandler) GetTimeline(c *gin.Context) {
 	userID := c.GetString("user_id")
 
-	tweets, err := h.tweetUsecase.GetTimeline(userID)
+	limit := 20
+	if l := c.Query("limit"); l != "" {
+		if parsed, err := strconv.Atoi(l); err == nil && parsed > 0 {
+			limit = parsed
+		}
+	}
+
+	var cursor *time.Time
+	if cs := c.Query("cursor"); cs != "" {
+		parsed, err := time.Parse(time.RFC3339, cs)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "cursorの形式が不正です"})
+			return
+		}
+		cursor = &parsed
+	}
+
+	tweets, err := h.tweetUsecase.GetTimeline(userID, cursor, limit)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, tweets)
+	var nextCursor *time.Time
+	if len(tweets) == limit {
+		nextCursor = &tweets[len(tweets)-1].CreatedAt
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"tweets":      tweets,
+		"next_cursor": nextCursor,
+	})
 }
 
 func (h *TweetHandler) Update(c *gin.Context) {
