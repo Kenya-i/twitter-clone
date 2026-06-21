@@ -23,6 +23,9 @@ export default function Timeline() {
   const [content, setContent] = useState('')
   const [message, setMessage] = useState('')
   const [tweets, setTweets] = useState<Tweet[]>([])
+  const [nextCursor, setNextCursor] = useState<string | null>(null)
+  const [loadingMore, setLoadingMore] = useState(false)
+
 
   useEffect(() => {
     if (token === null) {
@@ -31,8 +34,12 @@ export default function Timeline() {
     }
   }, [token, router])
 
-  const fetchTweets = async () => {
-    const res = await fetch(`${API_URL}/tweets`, {
+  const fetchTweets = async (cursor?: string) => {
+    const url = cursor
+      ? `${API_URL}/tweets?cursor=${encodeURIComponent(cursor)}`
+      : `${API_URL}/tweets`
+
+    const res = await fetch(url, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -40,8 +47,16 @@ export default function Timeline() {
 
     if (res.ok) {
       const data = await res.json()
-      setTweets(data)
+      setTweets((prev) => (cursor ? [...prev, ...data.tweets] : data.tweets))
+      setNextCursor(data.next_cursor)
     }
+  }
+
+  const handleLoadMore = async () => {
+    if (!nextCursor) return
+    setLoadingMore(true)
+    await fetchTweets(nextCursor)
+    setLoadingMore(false)
   }
 
   useEffect(() => {
@@ -253,6 +268,15 @@ export default function Timeline() {
             </div>
           ))}
         </div>
+        {nextCursor && (
+          <button
+            onClick={handleLoadMore}
+            disabled={loadingMore}
+            className="w-full text-sm text-blue-500 hover:underline mt-4 disabled:text-gray-400"
+          >
+            {loadingMore ? '読み込み中...' : 'もっと読み込む'}
+          </button>
+        )}
       </div>
     </div>
   )
