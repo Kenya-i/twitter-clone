@@ -29,6 +29,10 @@ func (m *mockTweetRepository) FindByFollowing(userID string, cursor *time.Time, 
 	return nil, nil
 }
 
+func (m *mockTweetRepository) Search(query string, cursor *time.Time, limit int) ([]*domain.Tweet, error) {
+	return nil, nil
+}
+
 func (m *mockTweetRepository) Update(tweet *domain.Tweet) error {
 	return nil
 }

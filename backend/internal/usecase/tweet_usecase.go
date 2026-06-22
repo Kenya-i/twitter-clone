@@ -57,6 +57,21 @@ func (u *tweetUsecase) GetTimeline(userID string, cursor *time.Time, limit int) 
 	return tweets, nil
 }
 
+func (u *tweetUsecase) Search(query, userID string, cursor *time.Time, limit int) ([]*domain.Tweet, error) {
+	tweets, err := u.tweetRepo.Search(query, cursor, limit)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, tweet := range tweets {
+		if err := u.attachLikeInfo(tweet, userID); err != nil {
+			return nil, err
+		}
+	}
+
+	return tweets, nil
+}
+
 func (u *tweetUsecase) attachLikeInfo(tweet *domain.Tweet, userID string) error {
 	count, err := u.likeRepo.CountByTweetID(tweet.ID)
 	if err != nil {
