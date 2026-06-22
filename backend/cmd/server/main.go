@@ -56,6 +56,7 @@ func main() {
 		auth.POST("/users/:id/follow", followHandler.Follow)
 		auth.DELETE("/users/:id/follow", followHandler.Unfollow)
 		auth.GET("/tweets", tweetHandler.GetTimeline)
+		auth.GET("/tweets/search", tweetHandler.Search)
 		auth.POST("/tweets", tweetHandler.Post)
 		auth.GET("/tweets/:id", tweetHandler.GetTweet)
 		auth.PUT("/tweets/:id", tweetHandler.Update)

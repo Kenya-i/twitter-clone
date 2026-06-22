@@ -94,6 +94,42 @@ func (r *tweetRepository) FindByFollowing(userID string, cursor *time.Time, limi
 	return tweets, rows.Err()
 }
 
+func (r *tweetRepository) Search(query string, cursor *time.Time, limit int) ([]*domain.Tweet, error) {
+	sql := `
+		SELECT id, user_id, content, created_at, updated_at
+		FROM tweets
+		WHERE content ILIKE '%' || $1 || '%'
+		   AND ($2::timestamptz IS NULL OR created_at < $2)
+		ORDER BY created_at DESC
+		LIMIT $3`
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	rows, err := r.db.Query(ctx, sql, query, cursor, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	tweets := []*domain.Tweet{}
+	for rows.Next() {
+		var tweet domain.Tweet
+		if err := rows.Scan(
+			&tweet.ID,
+			&tweet.UserID,
+			&tweet.Content,
+			&tweet.CreatedAt,
+			&tweet.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		tweets = append(tweets, &tweet)
+	}
+
+	return tweets, rows.Err()
+}
+
 func (r *tweetRepository) Update(tweet *domain.Tweet) error {
 	query := `UPDATE tweets SET content = $1, updated_at = $2 WHERE id = $3`
 
