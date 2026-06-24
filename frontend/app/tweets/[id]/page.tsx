@@ -5,16 +5,9 @@ import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '../../context/AuthContext'
 import { API_URL } from '../../../lib/api'
-
-type Tweet = {
-  id: string
-  user_id: string
-  content: string
-  created_at: string
-  updated_at: string
-  like_count: number
-  liked_by_me: boolean
-}
+import { toggleLike } from '../../../lib/tweets'
+import { useRequireAuth } from '../../../hooks/useRequireAuth'
+import { Tweet } from '../../../types/tweet'
 
 export default function TweetDetail() {
   const params = useParams<{ id: string }>()
@@ -24,12 +17,7 @@ export default function TweetDetail() {
   const [isEditing, setIsEditing] = useState(false)
   const [editContent, setEditContent] = useState('')
 
-  useEffect(() => {
-    if (token === null) {
-      const saved = localStorage.getItem('token')
-      if (!saved) router.push('/')
-    }
-  }, [token, router])
+  useRequireAuth(token)
 
   useEffect(() => {
     if (!token) return
@@ -60,14 +48,9 @@ export default function TweetDetail() {
       like_count: tweet.like_count + (wasLiked ? -1 : 1),
     })
 
-    const res = await fetch(`${API_URL}/tweets/${tweet.id}/like`, {
-      method: wasLiked ? 'DELETE' : 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
+    const ok = await toggleLike(tweet.id, wasLiked, token)
 
-    if (!res.ok) {
+    if (!ok) {
       setTweet({
         ...tweet,
         liked_by_me: wasLiked,

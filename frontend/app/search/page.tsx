@@ -1,20 +1,14 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '../context/AuthContext'
 import { API_URL } from '../../lib/api'
-
-type Tweet = {
-  id: string
-  user_id: string
-  content: string
-  created_at: string
-  updated_at: string
-  like_count: number
-  liked_by_me: boolean
-}
+import { toggleLike } from '../../lib/tweets'
+import { useRequireAuth } from '../../hooks/useRequireAuth'
+import { Tweet } from '../../types/tweet'
+import TweetCard from '../../components/TweetCard'
 
 export default function Search() {
   const router = useRouter()
@@ -25,12 +19,7 @@ export default function Search() {
   const [loadingMore, setLoadingMore] = useState(false)
   const [searched, setSearched] = useState(false)
 
-  useEffect(() => {
-    if (token === null) {
-      const saved = localStorage.getItem('token')
-      if (!saved) router.push('/')
-    }
-  }, [token, router])
+  useRequireAuth(token)
 
   const fetchResults = async (q: string, cursor?: string) => {
     const params = new URLSearchParams({ q })
@@ -72,12 +61,9 @@ export default function Search() {
       )
     )
 
-    const res = await fetch(`${API_URL}/tweets/${tweet.id}/like`, {
-      method: wasLiked ? 'DELETE' : 'POST',
-      headers: { Authorization: `Bearer ${token}` },
-    })
+    const ok = await toggleLike(tweet.id, wasLiked, token)
 
-    if (!res.ok) {
+    if (!ok) {
       setTweets((prev) =>
         prev.map((t) =>
           t.id === tweet.id
@@ -116,28 +102,7 @@ export default function Search() {
 
         <div className="space-y-3">
           {tweets.map((tweet) => (
-            <div key={tweet.id} className="border-b border-gray-200 pb-2">
-              <Link href={`/users/${tweet.user_id}`} className="text-xs text-blue-500 hover:underline">
-                投稿者のプロフィール
-              </Link>
-              <p className="text-sm mt-1">{tweet.content}</p>
-              <p className="text-xs text-gray-400 mt-1">
-                {new Date(tweet.created_at).toLocaleString()}
-              </p>
-              <div className="flex items-center gap-3 mt-1">
-                <button
-                  onClick={() => handleLike(tweet)}
-                  className={`text-xs flex items-center gap-1 ${
-                    tweet.liked_by_me ? 'text-pink-500' : 'text-gray-400 hover:text-pink-500'
-                  }`}
-                >
-                  {tweet.liked_by_me ? '♥' : '♡'} {tweet.like_count}
-                </button>
-                <Link href={`/tweets/${tweet.id}`} className="text-xs text-blue-500 hover:underline">
-                  詳細
-                </Link>
-              </div>
-            </div>
+            <TweetCard key={tweet.id} tweet={tweet} currentUserId={userId} onLike={handleLike} />
           ))}
           {searched && tweets.length === 0 && (
             <p className="text-sm text-gray-400 text-center">該当するツイートが見つかりません</p>
