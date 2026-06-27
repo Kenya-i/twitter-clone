@@ -12,6 +12,7 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/redis/go-redis/v9"
 )
 
 func main() {
@@ -23,11 +24,16 @@ func main() {
 	}
 	defer db.Close()
 
+	redisClient := redis.NewClient(&redis.Options{
+		Addr: cfg.RedisAddr,
+	})
+	defer redisClient.Close()
+
 	userRepo := repository.NewUserRepository(db)
 	userUsecase := usecase.NewUserUsecase(userRepo, cfg.JWTSecret)
 	userHandler := handler.NewUserHandler(userUsecase)
 
-	tweetRepo := repository.NewTweetRepository(db)
+	tweetRepo := repository.NewCachedTweetRepository(repository.NewTweetRepository(db), redisClient)
 	likeRepo := repository.NewLikeRepository(db)
 	tweetUsecase := usecase.NewTweetUsecase(tweetRepo, likeRepo)
 	tweetHandler := handler.NewTweetHandler(tweetUsecase)
