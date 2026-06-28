@@ -2,6 +2,9 @@ package usecase
 
 import (
 	"errors"
+	"fmt"
+	"io"
+	"path/filepath"
 	"time"
 
 	"github.com/Kenya-i/twitter-clone/internal/domain"
@@ -10,12 +13,13 @@ import (
 )
 
 type userUsecase struct {
-	userRepo  domain.UserRepository
-	jwtSecret string
+	userRepo     domain.UserRepository
+	imageStorage domain.ImageStorage
+	jwtSecret    string
 }
 
-func NewUserUsecase(userRepo domain.UserRepository, jwtSecret string) domain.UserUsecase {
-	return &userUsecase{userRepo: userRepo, jwtSecret: jwtSecret}
+func NewUserUsecase(userRepo domain.UserRepository, imageStorage domain.ImageStorage, jwtSecret string) domain.UserUsecase {
+	return &userUsecase{userRepo: userRepo, imageStorage: imageStorage, jwtSecret: jwtSecret}
 }
 
 func (u *userUsecase) Register(username, email, password, displayName string) (*domain.User, error) {
@@ -64,4 +68,27 @@ func (u *userUsecase) GetProfile(id string) (*domain.User, error) {
 
 func (u *userUsecase) GetUsers() ([]*domain.User, error) {
 	return u.userRepo.FindAll()
+}
+
+func (u *userUsecase) UpdateAvatar(userID string, file io.Reader, filename string, contentType string) (*domain.User, error) {
+	user, err := u.userRepo.FindByID(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	ext := filepath.Ext(filename)
+	key := fmt.Sprintf("avatars/%s-%d%s", userID, time.Now().UnixNano(), ext)
+
+	url, err := u.imageStorage.Upload(file, key, contentType)
+	if err != nil {
+		return nil, err
+	}
+
+	user.AvatarURL = url
+
+	if err := u.userRepo.Update(user); err != nil {
+		return nil, err
+	}
+
+	return user, nil
 }

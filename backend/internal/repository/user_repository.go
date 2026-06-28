@@ -140,3 +140,24 @@ func (r *userRepository) FindAll() ([]*domain.User, error) {
 
 	return users, rows.Err()
 }
+
+func (r *userRepository) Update(user *domain.User) error {
+	query := `
+		UPDATE users
+		SET display_name = $1, bio = $2, avatar_url = $3, updated_at = $4
+		WHERE id = $5`
+
+	user.UpdatedAt = time.Now()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	_, err := r.db.Exec(ctx, query,
+		user.DisplayName,
+		user.Bio,
+		user.AvatarURL,
+		user.UpdatedAt,
+		user.ID,
+	)
+	return err
+}

@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"io"
 	"net/http"
 
 	"github.com/Kenya-i/twitter-clone/internal/domain"
@@ -77,4 +78,32 @@ func (h *UserHandler) GetUsers(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, users)
+}
+
+func (h *UserHandler) UpdateAvatar(c *gin.Context) {
+	userID := c.GetString("user_id")
+
+	fileHeader, err := c.FormFile("avatar")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "画像ファイルを指定してください"})
+		return
+	}
+
+	file, err := fileHeader.Open()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	defer file.Close()
+
+	var reader io.Reader = file
+	contentType := fileHeader.Header.Get("Content-Type")
+
+	user, err := h.userUsecase.UpdateAvatar(userID, reader, fileHeader.Filename, contentType)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, user)
 }
