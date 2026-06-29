@@ -1,6 +1,9 @@
 package domain
 
-import "time"
+import (
+	"io"
+	"time"
+)
 
 type User struct {
 	ID             string    `json:"id"`
@@ -9,6 +12,7 @@ type User struct {
 	HashedPassword string    `json:"-"`
 	DisplayName    string    `json:"display_name"`
 	Bio            string    `json:"bio"`
+	AvatarURL      string    `json:"avatar_url"`
 	CreatedAt      time.Time `json:"created_at"`
 	UpdatedAt      time.Time `json:"updated_at"`
 }
@@ -19,6 +23,7 @@ type UserRepository interface {
 	FindByEmail(email string) (*User, error)
 	FindByUsername(username string) (*User, error)
 	FindAll() ([]*User, error)
+	Update(user *User) error
 }
 
 type UserUsecase interface {
@@ -26,4 +31,9 @@ type UserUsecase interface {
 	Login(email, password string) (string, error)
 	GetProfile(id string) (*User, error)
 	GetUsers() ([]*User, error)
+	UpdateAvatar(userID string, file io.Reader, filename string, contentType string) (*User, error)
+}
+
+type ImageStorage interface {
+	Upload(file io.Reader, filename string, contentType string) (url string, err error)
 }

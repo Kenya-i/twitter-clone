@@ -20,7 +20,15 @@ func NewCachedTweetRepository(inner domain.TweetRepository, redisClient *redis.C
 }
 
 func (r *cachedTweetRepository) Create(tweet *domain.Tweet) error {
-	return r.inner.Create(tweet)
+	if err := r.inner.Create(tweet); err != nil {
+		return err
+	}
+
+	ctx := context.Background()
+	key := fmt.Sprintf("timeline:%s:20", tweet.UserID)
+	r.redis.Del(ctx, key)
+
+	return nil
 }
 
 func (r *cachedTweetRepository) FindByID(id string) (*domain.Tweet, error) {

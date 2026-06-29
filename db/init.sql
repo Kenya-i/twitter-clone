@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS users (
     hashed_password TEXT NOT NULL,
     display_name VARCHAR(100) NOT NULL,
     bio TEXT DEFAULT '',
+    avatar_url TEXT DEFAULT '',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );

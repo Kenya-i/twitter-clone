@@ -12,6 +12,7 @@ type User = {
   email: string
   display_name: string
   bio: string
+  avatar_url: string
   created_at: string
 }
 
@@ -27,6 +28,8 @@ export default function UserProfile() {
   const { token, userId } = useAuth()
   const [user, setUser] = useState<User | null>(null)
   const [followInfo, setFollowInfo] = useState<FollowInfo | null>(null)
+  const [avatarFile, setAvatarFile] = useState<File | null>(null)
+  const [uploading, setUploading] = useState(false)
 
   useEffect(() => {
     if (token === null) {
@@ -86,6 +89,29 @@ export default function UserProfile() {
     }
   }
 
+  const handleAvatarUpload = async () => {
+    if (!avatarFile) return
+    setUploading(true)
+
+    const formData = new FormData()
+    formData.append('avatar', avatarFile)
+
+    const res = await fetch(`${API_URL}/users/me/avatar`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData,
+    })
+
+    if (res.ok) {
+      const data = await res.json()
+      setUser(data)
+      setAvatarFile(null)
+    }
+
+    setUploading(false)
+  }
+
+
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md">
@@ -99,6 +125,11 @@ export default function UserProfile() {
         {user ? (
           <div className="space-y-3">
             <div className="flex justify-between items-start">
+              <img
+                src={user.avatar_url || '/default-avatar.svg'}
+                alt="avatar"
+                className="w-16 h-16 rounded-full object-cover bg-gray-200"
+              />
               <div>
                 <p className="text-xs text-gray-400">表示名</p>
                 <p className="text-lg font-bold">{user.display_name}</p>
@@ -138,6 +169,25 @@ export default function UserProfile() {
                 <p>{user.bio}</p>
               </div>
             )}
+
+            {params.id === userId && (
+              <div className="space-y-1">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setAvatarFile(e.target.files?.[0] ?? null)}
+                  className="text-xs"
+                />
+                <button
+                  onClick={handleAvatarUpload}
+                  disabled={!avatarFile || uploading}
+                  className="text-xs text-blue-500 hover:text-blue-700 disabled:text-gray-400"
+                >
+                  {uploading ? 'アップロード中...' : '画像を更新'}
+                </button>
+              </div>
+            )}
+
 
             <div>
               <p className="text-xs text-gray-400">登録日</p>

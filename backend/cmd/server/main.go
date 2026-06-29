@@ -29,8 +29,13 @@ func main() {
 	})
 	defer redisClient.Close()
 
+	imageStorage, err := repository.NewS3Storage(cfg)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	userRepo := repository.NewUserRepository(db)
-	userUsecase := usecase.NewUserUsecase(userRepo, cfg.JWTSecret)
+	userUsecase := usecase.NewUserUsecase(userRepo, imageStorage, cfg.JWTSecret)
 	userHandler := handler.NewUserHandler(userUsecase)
 
 	tweetRepo := repository.NewCachedTweetRepository(repository.NewTweetRepository(db), redisClient)
@@ -59,6 +64,7 @@ func main() {
 		auth.GET("/users", userHandler.GetUsers)
 		auth.GET("/users/:id", userHandler.GetProfile)
 		auth.GET("/users/:id/follow", followHandler.GetFollowInfo)
+		auth.POST("/users/me/avatar", userHandler.UpdateAvatar)
 		auth.POST("/users/:id/follow", followHandler.Follow)
 		auth.DELETE("/users/:id/follow", followHandler.Unfollow)
 		auth.GET("/tweets", tweetHandler.GetTimeline)
