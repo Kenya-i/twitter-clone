@@ -12,12 +12,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 )
 
 type s3Storage struct {
-	client   *s3.Client
-	bucket   string
-	endpoint string
+	client    *s3.Client
+	bucket    string
+	publicURL string
 }
 
 func NewS3Storage(cfg *config.Config) (domain.ImageStorage, error) {
@@ -37,14 +38,34 @@ func NewS3Storage(cfg *config.Config) (domain.ImageStorage, error) {
 		Bucket: aws.String(cfg.S3Bucket),
 	})
 	if err != nil {
-		var alreadyOwned *s3.BucketAlreadyOwnedByYou
-		var alreadyExists *s3.BucketAlreadyExists
+		var alreadyOwned *types.BucketAlreadyOwnedByYou
+		var alreadyExists *types.BucketAlreadyExists
 		if !errors.As(err, &alreadyOwned) && !errors.As(err, &alreadyExists) {
 			return nil, err
 		}
 	}
 
-	return &s3Storage{client: client, bucket: cfg.S3Bucket, endpoint: cfg.S3Endpoint}, nil
+	policy := fmt.Sprintf(`{
+		"Version": "2012-10-17",
+		"Statement": [
+			{
+				"Effect": "Allow",
+				"Principal": "*",
+				"Action": ["s3:GetObject"],
+				"Resource": "arn:aws:s3:::%s/*"
+			}
+		]
+	}`, cfg.S3Bucket)
+
+	_, err = client.PutBucketPolicy(ctx, &s3.PutBucketPolicyInput{
+		Bucket: aws.String(cfg.S3Bucket),
+		Policy: aws.String(policy),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &s3Storage{client: client, bucket: cfg.S3Bucket, publicURL: cfg.S3PublicURL}, nil
 }
 
 func (s *s3Storage) Upload(file io.Reader, filename string, contentType string) (string, error) {
@@ -61,5 +82,5 @@ func (s *s3Storage) Upload(file io.Reader, filename string, contentType string) 
 		return "", err
 	}
 
-	return fmt.Sprintf("%s/%s/%s", s.endpoint, s.bucket, filename), nil
+	return fmt.Sprintf("%s/%s/%s", s.publicURL, s.bucket, filename), nil
 }
