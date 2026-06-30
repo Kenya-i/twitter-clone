@@ -17,24 +17,42 @@ func NewTweetRepository(db *pgxpool.Pool) domain.TweetRepository {
 }
 
 func (r *tweetRepository) Create(tweet *domain.Tweet) error {
-	query := `
-		INSERT INTO tweets (user_id, content, created_at, updated_at)
-		VALUES ($1, $2, $3, $4)
-		RETURNING id`
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	tx, err := r.db.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
 
 	now := time.Now()
 	tweet.CreatedAt = now
 	tweet.UpdatedAt = now
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
+	query := `
+		INSERT INTO tweets (user_id, content, created_at, updated_at)
+		VALUES ($1, $2, $3, $4)
+		RETURNING id`
 
-	return r.db.QueryRow(ctx, query,
+	if err := tx.QueryRow(ctx, query,
 		tweet.UserID,
 		tweet.Content,
 		tweet.CreatedAt,
 		tweet.UpdatedAt,
-	).Scan(&tweet.ID)
+	).Scan(&tweet.ID); err != nil {
+		return err
+	}
+
+	for i, imageURL := range tweet.Images {
+		if _, err := tx.Exec(ctx, `
+			INSERT INTO tweet_images (tweet_id, image_url, position)
+			VALUES ($1, $2, $3)`, tweet.ID, imageURL, i); err != nil {
+			return err
+		}
+	}
+
+	return tx.Commit(ctx)
 }
 
 func (r *tweetRepository) FindByID(id string) (*domain.Tweet, error) {
@@ -54,6 +72,11 @@ func (r *tweetRepository) FindByID(id string) (*domain.Tweet, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	if err := r.attachImages([]*domain.Tweet{&tweet}); err != nil {
+		return nil, err
+	}
+
 	return &tweet, nil
 }
 
@@ -90,8 +113,15 @@ func (r *tweetRepository) FindByFollowing(userID string, cursor *time.Time, limi
 		}
 		tweets = append(tweets, &tweet)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 
-	return tweets, rows.Err()
+	if err := r.attachImages(tweets); err != nil {
+		return nil, err
+	}
+
+	return tweets, nil
 }
 
 func (r *tweetRepository) Search(query string, cursor *time.Time, limit int) ([]*domain.Tweet, error) {
@@ -126,8 +156,54 @@ func (r *tweetRepository) Search(query string, cursor *time.Time, limit int) ([]
 		}
 		tweets = append(tweets, &tweet)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 
-	return tweets, rows.Err()
+	if err := r.attachImages(tweets); err != nil {
+		return nil, err
+	}
+
+	return tweets, nil
+}
+
+func (r *tweetRepository) attachImages(tweets []*domain.Tweet) error {
+	if len(tweets) == 0 {
+		return nil
+	}
+
+	ids := make([]string, len(tweets))
+	tweetByID := make(map[string]*domain.Tweet, len(tweets))
+	for i, t := range tweets {
+		ids[i] = t.ID
+		tweetByID[t.ID] = t
+		t.Images = []string{}
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	rows, err := r.db.Query(ctx, `
+		SELECT tweet_id, image_url
+		FROM tweet_images
+		WHERE tweet_id = ANY($1::uuid[])
+		ORDER BY tweet_id, position`, ids)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var tweetID, imageURL string
+		if err := rows.Scan(&tweetID, &imageURL); err != nil {
+			return err
+		}
+		if t, ok := tweetByID[tweetID]; ok {
+			t.Images = append(t.Images, imageURL)
+		}
+	}
+
+	return rows.Err()
 }
 
 func (r *tweetRepository) Update(tweet *domain.Tweet) error {

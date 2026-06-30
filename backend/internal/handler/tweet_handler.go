@@ -18,17 +18,35 @@ func NewTweetHandler(tweetUsecase domain.TweetUsecase) *TweetHandler {
 }
 
 func (h *TweetHandler) Post(c *gin.Context) {
-	var req struct {
-		Content string `json:"content" binding:"required"`
-	}
-	if err := c.ShouldBindJSON(&req); err != nil {
+	userID := c.GetString("user_id")
+	content := c.PostForm("content")
+
+	if content == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "contentは必須です"})
 		return
 	}
 
-	userID := c.GetString("user_id")
+	var images []domain.ImageFile
 
-	tweet, err := h.tweetUsecase.Post(userID, req.Content)
+	form, err := c.MultipartForm()
+	if err == nil {
+		for _, fileHeader := range form.File["images"] {
+			file, err := fileHeader.Open()
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+				return
+			}
+			defer file.Close()
+
+			images = append(images, domain.ImageFile{
+				Reader:      file,
+				Filename:    fileHeader.Filename,
+				ContentType: fileHeader.Header.Get("Content-Type"),
+			})
+		}
+	}
+
+	tweet, err := h.tweetUsecase.Post(userID, content, images)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

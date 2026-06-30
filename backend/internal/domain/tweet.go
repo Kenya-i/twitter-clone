@@ -1,15 +1,25 @@
 package domain
 
-import "time"
+import (
+	"io"
+	"time"
+)
 
 type Tweet struct {
 	ID        string    `json:"id"`
 	UserID    string    `json:"user_id"`
 	Content   string    `json:"content"`
+	Images    []string  `json:"images"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 	LikeCount int       `json:"like_count"`
 	LikedByMe bool      `json:"liked_by_me"`
+}
+
+type ImageFile struct {
+	Reader      io.Reader
+	Filename    string
+	ContentType string
 }
 
 type TweetRepository interface {
@@ -22,7 +32,7 @@ type TweetRepository interface {
 }
 
 type TweetUsecase interface {
-	Post(userID, content string) (*Tweet, error)
+	Post(userID, content string, images []ImageFile) (*Tweet, error)
 	GetTweet(id, userID string) (*Tweet, error)
 	GetTimeline(userID string, cursor *time.Time, limit int) ([]*Tweet, error)
 	Search(query, userID string, cursor *time.Time, limit int) ([]*Tweet, error)

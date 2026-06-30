@@ -141,6 +141,21 @@ export default function TweetDetail() {
             ) : (
               <>
                 <p className="text-sm mt-1">{tweet.content}</p>
+                {tweet.images.length > 0 && (
+                  <div className="flex gap-2 mt-2 flex-wrap">
+                    {tweet.images.map((url, i) => (
+                      <img
+                        key={i}
+                        src={url}
+                        alt="tweet image"
+                        className="w-24 h-24 object-cover rounded-md"
+                      />
+                    ))}
+                  </div>
+                )}
+                <p className="text-xs text-gray-400 mt-1">
+                  {new Date(tweet.created_at).toLocaleString()}
+                </p>
                 <p className="text-xs text-gray-400 mt-1">
                   {new Date(tweet.created_at).toLocaleString()}
                 </p>

@@ -18,6 +18,14 @@ CREATE TABLE IF NOT EXISTS tweets (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
 
+CREATE TABLE IF NOT EXISTS tweet_images (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tweet_id UUID NOT NULL REFERENCES tweets(id) ON DELETE CASCADE,
+    image_url TEXT NOT NULL,
+    position INT NOT NULL DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+
 CREATE TABLE IF NOT EXISTS likes (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES users(id),

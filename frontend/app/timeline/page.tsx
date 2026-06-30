@@ -18,6 +18,7 @@ export default function Timeline() {
   const [tweets, setTweets] = useState<Tweet[]>([])
   const [nextCursor, setNextCursor] = useState<string | null>(null)
   const [loadingMore, setLoadingMore] = useState(false)
+  const [imageFiles, setImageFiles] = useState<File[]>([])
 
   useRequireAuth(token)
 
@@ -54,13 +55,16 @@ export default function Timeline() {
     e.preventDefault()
     setMessage('')
 
+    const formData = new FormData()
+    formData.append('content', content)
+    imageFiles.forEach((file) => formData.append('images', file))
+
     const res = await fetch(`${API_URL}/tweets`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ content }),
+      body: formData,
     })
 
     if (!res.ok) {
@@ -69,9 +73,11 @@ export default function Timeline() {
     }
 
     setContent('')
+    setImageFiles([])
     setMessage('投稿しました！')
     fetchTweets()
   }
+
 
   const handleDelete = async (id: string) => {
     const res = await fetch(`${API_URL}/tweets/${id}`, {
@@ -174,6 +180,13 @@ export default function Timeline() {
             className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="いまどうしてる？"
             rows={3}
+          />
+          <input
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={(e) => setImageFiles(Array.from(e.target.files ?? []))}
+            className="text-xs"
           />
           <button
             type="submit"

@@ -40,7 +40,7 @@ func main() {
 
 	tweetRepo := repository.NewCachedTweetRepository(repository.NewTweetRepository(db), redisClient)
 	likeRepo := repository.NewLikeRepository(db)
-	tweetUsecase := usecase.NewTweetUsecase(tweetRepo, likeRepo)
+	tweetUsecase := usecase.NewTweetUsecase(tweetRepo, likeRepo, imageStorage)
 	tweetHandler := handler.NewTweetHandler(tweetUsecase)
 
 	followRepo := repository.NewFollowRepository(db)
