@@ -2,24 +2,39 @@ package usecase
 
 import (
 	"errors"
+	"fmt"
+	"path/filepath"
 	"time"
 
 	"github.com/Kenya-i/twitter-clone/internal/domain"
 )
 
 type tweetUsecase struct {
-	tweetRepo domain.TweetRepository
-	likeRepo  domain.LikeRepository
+	tweetRepo    domain.TweetRepository
+	likeRepo     domain.LikeRepository
+	imageStorage domain.ImageStorage
 }
 
-func NewTweetUsecase(tweetRepo domain.TweetRepository, likeRepo domain.LikeRepository) domain.TweetUsecase {
-	return &tweetUsecase{tweetRepo: tweetRepo, likeRepo: likeRepo}
+func NewTweetUsecase(tweetRepo domain.TweetRepository, likeRepo domain.LikeRepository, imageStorage domain.ImageStorage) domain.TweetUsecase {
+	return &tweetUsecase{tweetRepo: tweetRepo, likeRepo: likeRepo, imageStorage: imageStorage}
 }
 
-func (u *tweetUsecase) Post(userID, content string) (*domain.Tweet, error) {
+func (u *tweetUsecase) Post(userID, content string, images []domain.ImageFile) (*domain.Tweet, error) {
 	tweet := &domain.Tweet{
 		UserID:  userID,
 		Content: content,
+	}
+
+	for i, img := range images {
+		ext := filepath.Ext(img.Filename)
+		key := fmt.Sprintf("tweets/%s-%d-%d%s", userID, time.Now().UnixNano(), i, ext)
+
+		url, err := u.imageStorage.Upload(img.Reader, key, img.ContentType)
+		if err != nil {
+			return nil, err
+		}
+
+		tweet.Images = append(tweet.Images, url)
 	}
 
 	if err := u.tweetRepo.Create(tweet); err != nil {
