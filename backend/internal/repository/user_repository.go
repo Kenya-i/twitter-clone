@@ -41,7 +41,7 @@ func (r *userRepository) Create(user *domain.User) error {
 }
 
 func (r *userRepository) FindByID(id string) (*domain.User, error) {
-	query := `SELECT id, username, email, hashed_password, display_name, bio, created_at, updated_at FROM users WHERE id = $1`
+	query := `SELECT id, username, email, hashed_password, display_name, bio, avatar_url, created_at, updated_at FROM users WHERE id = $1`
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -54,6 +54,7 @@ func (r *userRepository) FindByID(id string) (*domain.User, error) {
 		&user.HashedPassword,
 		&user.DisplayName,
 		&user.Bio,
+		&user.AvatarURL,
 		&user.CreatedAt,
 		&user.UpdatedAt,
 	)
@@ -64,7 +65,7 @@ func (r *userRepository) FindByID(id string) (*domain.User, error) {
 }
 
 func (r *userRepository) FindByEmail(email string) (*domain.User, error) {
-	query := `SELECT id, username, email, hashed_password, display_name, bio, created_at, updated_at FROM users WHERE email = $1`
+	query := `SELECT id, username, email, hashed_password, display_name, bio, avatar_url, created_at, updated_at FROM users WHERE email = $1`
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -77,6 +78,7 @@ func (r *userRepository) FindByEmail(email string) (*domain.User, error) {
 		&user.HashedPassword,
 		&user.DisplayName,
 		&user.Bio,
+		&user.AvatarURL,
 		&user.CreatedAt,
 		&user.UpdatedAt,
 	)
@@ -87,7 +89,7 @@ func (r *userRepository) FindByEmail(email string) (*domain.User, error) {
 }
 
 func (r *userRepository) FindByUsername(username string) (*domain.User, error) {
-	query := `SELECT id, username, email, hashed_password, display_name, bio, created_at, updated_at FROM users WHERE username = $1`
+	query := `SELECT id, username, email, hashed_password, display_name, bio, avatar_url, created_at, updated_at FROM users WHERE username = $1`
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -100,6 +102,7 @@ func (r *userRepository) FindByUsername(username string) (*domain.User, error) {
 		&user.HashedPassword,
 		&user.DisplayName,
 		&user.Bio,
+		&user.AvatarURL,
 		&user.CreatedAt,
 		&user.UpdatedAt,
 	)
@@ -110,7 +113,7 @@ func (r *userRepository) FindByUsername(username string) (*domain.User, error) {
 }
 
 func (r *userRepository) FindAll() ([]*domain.User, error) {
-	query := `SELECT id, username, email, display_name, bio, created_at, updated_at FROM users ORDER BY created_at DESC`
+	query := `SELECT id, username, email, display_name, bio, avatar_url, created_at, updated_at FROM users ORDER BY created_at DESC`
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -130,6 +133,7 @@ func (r *userRepository) FindAll() ([]*domain.User, error) {
 			&user.Email,
 			&user.DisplayName,
 			&user.Bio,
+			&user.AvatarURL,
 			&user.CreatedAt,
 			&user.UpdatedAt,
 		); err != nil {
