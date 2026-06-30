@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"errors"
+	"io"
 	"testing"
 	"time"
 
@@ -46,6 +47,13 @@ func (m *mockTweetRepository) Delete(id string) error {
 // Delete のテストでは使わないが、tweetUsecase の生成に必要
 type mockLikeRepository struct{}
 
+// mockImageStorage は domain.ImageStorage を実装する偽のストレージ
+type mockImageStorage struct{}
+
+func (m *mockImageStorage) Upload(file io.Reader, filename string, contentType string) (string, error) {
+	return "http://example.com/" + filename, nil
+}
+
 func (m *mockLikeRepository) Create(like *domain.Like) error              { return nil }
 func (m *mockLikeRepository) Delete(userID, tweetID string) error         { return nil }
 func (m *mockLikeRepository) Exists(userID, tweetID string) (bool, error) { return false, nil }
@@ -59,7 +67,7 @@ func TestDelete_他人のツイートは削除できない(t *testing.T) {
 	}
 	likeRepo := &mockLikeRepository{}
 
-	u := NewTweetUsecase(tweetRepo, likeRepo)
+	u := NewTweetUsecase(tweetRepo, likeRepo, &mockImageStorage{})
 
 	err := u.Delete("other-user", "tweet1")
 
@@ -76,7 +84,7 @@ func TestDelete_自分のツイートは削除できる(t *testing.T) {
 	}
 	likeRepo := &mockLikeRepository{}
 
-	u := NewTweetUsecase(tweetRepo, likeRepo)
+	u := NewTweetUsecase(tweetRepo, likeRepo, &mockImageStorage{})
 
 	err := u.Delete("owner-user", "tweet1")
 
@@ -93,7 +101,7 @@ func TestUpdate_他人のツイートは編集できない(t *testing.T) {
 	}
 	likeRepo := &mockLikeRepository{}
 
-	u := NewTweetUsecase(tweetRepo, likeRepo)
+	u := NewTweetUsecase(tweetRepo, likeRepo, &mockImageStorage{})
 
 	_, err := u.Update("other-user", "tweet1", "書き換えたい内容")
 
@@ -110,7 +118,7 @@ func TestUpdate_自分のツイートは編集できる(t *testing.T) {
 	}
 	likeRepo := &mockLikeRepository{}
 
-	u := NewTweetUsecase(tweetRepo, likeRepo)
+	u := NewTweetUsecase(tweetRepo, likeRepo, &mockImageStorage{})
 
 	updated, err := u.Update("owner-user", "tweet1", "新しい内容")
 
